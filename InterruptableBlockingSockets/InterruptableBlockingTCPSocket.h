@@ -1,23 +1,41 @@
+#ifndef INTERRUPTIBLE_BLOCKING_TCP_SOCKET_H
+#define INTERRUPTIBLE_BLOCKING_TCP_SOCKET_H
+
 //System includes
+#ifdef _WIN32
+#include <stdint.h>
+
+#ifndef int64_t
+typedef __int64 int64_t;
+#endif
+
+#ifndef uint64_t
+typedef unsigned __int64 uint64_t;
+#endif
+
+#else
+#include <inttypes.h>
+#endif
 
 //Library includes:
 #ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/deadline_timer.hpp>
 #endif
 
 //Local includes
 
-class cInterruptibleBlockUDPSocket
+class cInterruptibleBlockingTCPSocket
 {
 private:
-    //The serial port and io service for the port   
+    //The serial port and io service for the port
     boost::asio::io_service         m_oIOService;
-    boost::asio::ip::udp::socket    m_oSocket;
-    boost::asio::ip::udp::endpoint  m_oBoundLocalEndPoint;
-    boost::asio::ip::udp::endpoint  m_oConnectedRemoteEndPoint;
+    boost::asio::ip::tcp::socket    m_oSocket;
+    boost::asio::ip::tcp::endpoint  m_oBoundLocalEndPoint;
+    boost::asio::ip::tcp::endpoint  m_oConnectedRemoteEndPoint;
 
-    boost::asio::ip::udp::resolver  m_oResolver;
+    boost::asio::ip::tcp::resolver  m_oResolver;
 
     //Timer for deterining timeouts
     boost::asio::deadline_timer     m_oTimer;
@@ -37,34 +55,29 @@ private:
     void                            callback_timeOut(const boost::system::error_code& oError);
 
 public:
-    cInterruptibleBlockUDPSocket(const std::string &strName = "");
-    cInterruptibleBlockUDPSocket(const std::string &strRemoteAddress, uint16_t u16RemotePort, const std::string &strName = "");
+    cInterruptibleBlockingTCPSocket(const std::string &strName = "");
+    cInterruptibleBlockingTCPSocket(const std::string &strRemoteAddress, uint16_t u16RemotePort, const std::string &strName = "");
 
-    void                            openAndBindSocket(std::string strLocalAddress, uint16_t u16LocalPort);
     void                            openAndConnectSocket(std::string strRemoteAddress, uint16_t u16RemotePort);
     void                            close();
 
     bool                            send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
-    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const std::string &strRemoteHost, uint16_t u16RemotePort, uint32_t u32Timeout_ms = 0);
-    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms = 0);
 
     bool                            receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
-    bool                            receiveFrom(char *cpBuffer, uint32_t u32NBytes, std::string &strRemoteHost, uint16_t &u16RemotePort, uint32_t u32Timeout_ms = 0);
-    bool                            receiveFrom(char *cpBuffer, uint32_t u32NBytes, boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms = 0);
 
     void                            cancelCurrrentOperations();
 
     //Some utility functions
-    boost::asio::ip::udp::endpoint  createEndPoint(std::string strHostAddress, uint16_t u16Port);
-    std::string                     getEndPointHostAddress(boost::asio::ip::udp::endpoint oEndPoint);
-    uint16_t                        getEndPointPort(boost::asio::ip::udp::endpoint oEndPoint);
+    boost::asio::ip::tcp::endpoint  createEndPoint(std::string strHostAddress, uint16_t u16Port);
+    std::string                     getEndPointHostAddress(boost::asio::ip::tcp::endpoint oEndPoint);
+    uint16_t                        getEndPointPort(boost::asio::ip::tcp::endpoint oEndPoint);
 
     //Some accessors
-    boost::asio::ip::udp::endpoint  getBoundLocalEndpoint();
+    boost::asio::ip::tcp::endpoint  getBoundLocalEndpoint();
     std::string                     getBoundLocalAddress();
     uint16_t                        getBoundLocalPort();
 
-    boost::asio::ip::udp::endpoint  getConnectedRemoteEndPoint();
+    boost::asio::ip::tcp::endpoint  getConnectedRemoteEndPoint();
     std::string                     getConnectedRemoteAddress();
     uint16_t                        getConnectedRemotePort();
 
@@ -75,5 +88,8 @@ public:
 
     //Pass through some boost socket functionality:
     uint32_t                        getBytesAvailable();
+    boost::asio::ip::tcp::socket*   getBoostSocketPointer();
 
 };
+
+#endif // INTERRUPTIBLE_BLOCKING_TCP_SOCKET_H

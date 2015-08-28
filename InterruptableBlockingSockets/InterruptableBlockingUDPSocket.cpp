@@ -4,13 +4,17 @@
 #include <iostream>
 
 //Library includes
+#ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
+#include <boost/bind.hpp>
+#include <boost/asio/placeholders.hpp>
+#endif
 
 //Local includes
 #include "InterruptableBlockingUDPSocket.h"
 
 using namespace std;
 
-cInterruptibleBlockUDPSocket::cInterruptibleBlockUDPSocket(const string &strName) :
+cInterruptibleBlockingUDPSocket::cInterruptibleBlockingUDPSocket(const string &strName) :
     m_oSocket(m_oIOService),
     m_oTimer(m_oIOService),
     m_oResolver(m_oIOService),
@@ -19,7 +23,7 @@ cInterruptibleBlockUDPSocket::cInterruptibleBlockUDPSocket(const string &strName
 {
 }
 
-cInterruptibleBlockUDPSocket::cInterruptibleBlockUDPSocket(const string &strRemoteAddress, uint16_t u16RemotePort, const string &strName) :
+cInterruptibleBlockingUDPSocket::cInterruptibleBlockingUDPSocket(const string &strRemoteAddress, uint16_t u16RemotePort, const string &strName) :
     m_oSocket(m_oIOService),
     m_oTimer(m_oIOService),
     m_oResolver(m_oIOService),
@@ -29,7 +33,7 @@ cInterruptibleBlockUDPSocket::cInterruptibleBlockUDPSocket(const string &strRemo
     openAndConnectSocket(strRemoteAddress, u16RemotePort);
 }
 
-void cInterruptibleBlockUDPSocket::openAndBindSocket(string strLocalAddress, uint16_t u16LocalPort)
+void cInterruptibleBlockingUDPSocket::openAndBindSocket(string strLocalAddress, uint16_t u16LocalPort)
 {
     //Error code to check returns of socket functions
     boost::system::error_code oEC;
@@ -67,7 +71,7 @@ void cInterruptibleBlockUDPSocket::openAndBindSocket(string strLocalAddress, uin
     }
 }
 
-void cInterruptibleBlockUDPSocket::openAndConnectSocket(string strRemoteAddress, uint16_t u16RemotePort)
+void cInterruptibleBlockingUDPSocket::openAndConnectSocket(string strRemoteAddress, uint16_t u16RemotePort)
 {
     boost::system::error_code oEC;
 
@@ -104,7 +108,7 @@ void cInterruptibleBlockUDPSocket::openAndConnectSocket(string strRemoteAddress,
     }
 }
 
-void cInterruptibleBlockUDPSocket::close()
+void cInterruptibleBlockingUDPSocket::close()
 {
     //If the socket is open close it
     if(m_oSocket.is_open())
@@ -115,7 +119,7 @@ void cInterruptibleBlockUDPSocket::close()
     }
 }
 
-bool cInterruptibleBlockUDPSocket::send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
+bool cInterruptibleBlockingUDPSocket::send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
 {
     //Note this function sends to the specific endpoint set in the constructor or with the openAndBind function
 
@@ -124,7 +128,7 @@ bool cInterruptibleBlockUDPSocket::send(char *cpBuffer, uint32_t u32NBytes, uint
 
     //Asynchronously write characters
     m_oSocket.async_send( boost::asio::buffer(cpBuffer, u32NBytes),
-                             boost::bind(&cInterruptibleBlockUDPSocket::callback_complete,
+                             boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
                                          this,
                                          boost::asio::placeholders::error,
                                          boost::asio::placeholders::bytes_transferred) );
@@ -133,7 +137,7 @@ bool cInterruptibleBlockUDPSocket::send(char *cpBuffer, uint32_t u32NBytes, uint
     if(u32Timeout_ms)
     {
         m_oTimer.expires_from_now( boost::posix_time::milliseconds(u32Timeout_ms) );
-        m_oTimer.async_wait( boost::bind(&cInterruptibleBlockUDPSocket::callback_timeOut,
+        m_oTimer.async_wait( boost::bind(&cInterruptibleBlockingUDPSocket::callback_timeOut,
                                          this, boost::asio::placeholders::error) );
     }
 
@@ -144,12 +148,12 @@ bool cInterruptibleBlockUDPSocket::send(char *cpBuffer, uint32_t u32NBytes, uint
     return !m_bError;
 }
 
-bool cInterruptibleBlockUDPSocket::sendTo(char *cpBuffer, uint32_t u32NBytes, const std::string &strRemoteHost, uint16_t u16RemotePort, uint32_t u32Timeout_ms)
+bool cInterruptibleBlockingUDPSocket::sendTo(char *cpBuffer, uint32_t u32NBytes, const std::string &strRemoteHost, uint16_t u16RemotePort, uint32_t u32Timeout_ms)
 {
-    return cInterruptibleBlockUDPSocket::sendTo(cpBuffer, u32NBytes, createEndPoint(strRemoteHost, u16RemotePort), u32Timeout_ms);
+    return cInterruptibleBlockingUDPSocket::sendTo(cpBuffer, u32NBytes, createEndPoint(strRemoteHost, u16RemotePort), u32Timeout_ms);
 }
 
-bool cInterruptibleBlockUDPSocket::sendTo(char *cpBuffer, uint32_t u32NBytes, const boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms)
+bool cInterruptibleBlockingUDPSocket::sendTo(char *cpBuffer, uint32_t u32NBytes, const boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms)
 {
     //Note this function sends to the specific endpoint set in the constructor or with the openAndBind function
 
@@ -159,7 +163,7 @@ bool cInterruptibleBlockUDPSocket::sendTo(char *cpBuffer, uint32_t u32NBytes, co
     //Asynchronously write characters
     m_oSocket.async_send_to( boost::asio::buffer(cpBuffer, u32NBytes),
                              oRemoteEndPoint,
-                             boost::bind(&cInterruptibleBlockUDPSocket::callback_complete,
+                             boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
                                          this,
                                          boost::asio::placeholders::error,
                                          boost::asio::placeholders::bytes_transferred) );
@@ -168,7 +172,7 @@ bool cInterruptibleBlockUDPSocket::sendTo(char *cpBuffer, uint32_t u32NBytes, co
     if(u32Timeout_ms)
     {
         m_oTimer.expires_from_now( boost::posix_time::milliseconds(u32Timeout_ms) );
-        m_oTimer.async_wait( boost::bind(&cInterruptibleBlockUDPSocket::callback_timeOut,
+        m_oTimer.async_wait( boost::bind(&cInterruptibleBlockingUDPSocket::callback_timeOut,
                                          this, boost::asio::placeholders::error) );
     }
 
@@ -179,14 +183,14 @@ bool cInterruptibleBlockUDPSocket::sendTo(char *cpBuffer, uint32_t u32NBytes, co
     return !m_bError;
 }
 
-bool cInterruptibleBlockUDPSocket::receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
+bool cInterruptibleBlockingUDPSocket::receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
 {
     //Necessary after a timeout:
     m_oSocket.get_io_service().reset();
 
     //Asynchronously read characters into string
     m_oSocket.async_receive( boost::asio::buffer(cpBuffer, u32NBytes),
-                                  boost::bind(&cInterruptibleBlockUDPSocket::callback_complete,
+                                  boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
                                               this,
                                               boost::asio::placeholders::error,
                                               boost::asio::placeholders::bytes_transferred) );
@@ -195,7 +199,7 @@ bool cInterruptibleBlockUDPSocket::receive(char *cpBuffer, uint32_t u32NBytes, u
     if(u32Timeout_ms)
     {
         m_oTimer.expires_from_now(boost::posix_time::milliseconds(u32Timeout_ms));
-        m_oTimer.async_wait(boost::bind(&cInterruptibleBlockUDPSocket::callback_timeOut,
+        m_oTimer.async_wait(boost::bind(&cInterruptibleBlockingUDPSocket::callback_timeOut,
                                         this, boost::asio::placeholders::error));
     }
 
@@ -206,7 +210,7 @@ bool cInterruptibleBlockUDPSocket::receive(char *cpBuffer, uint32_t u32NBytes, u
     return !m_bError;
 }
 
-bool cInterruptibleBlockUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NBytes, std::string &strRemoteHost, uint16_t &u16RemotePort, uint32_t u32Timeout_ms)
+bool cInterruptibleBlockingUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NBytes, std::string &strRemoteHost, uint16_t &u16RemotePort, uint32_t u32Timeout_ms)
 {
     boost::asio::ip::udp::endpoint oRemoteEndPoint;
     bool bResult = receiveFrom(cpBuffer, u32NBytes, oRemoteEndPoint, u32Timeout_ms);
@@ -217,7 +221,7 @@ bool cInterruptibleBlockUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NByte
     return bResult;
 }
 
-bool cInterruptibleBlockUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NBytes, boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms)
+bool cInterruptibleBlockingUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NBytes, boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms)
 {
     //Necessary after a timeout:
     m_oSocket.get_io_service().reset();
@@ -225,7 +229,7 @@ bool cInterruptibleBlockUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NByte
     //Asynchronously read characters into string
     m_oSocket.async_receive_from( boost::asio::buffer(cpBuffer, u32NBytes),
                                   oRemoteEndPoint,
-                                  boost::bind(&cInterruptibleBlockUDPSocket::callback_complete,
+                                  boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
                                               this,
                                               boost::asio::placeholders::error,
                                               boost::asio::placeholders::bytes_transferred) );
@@ -234,7 +238,7 @@ bool cInterruptibleBlockUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NByte
     if(u32Timeout_ms)
     {
         m_oTimer.expires_from_now(boost::posix_time::milliseconds(u32Timeout_ms));
-        m_oTimer.async_wait(boost::bind(&cInterruptibleBlockUDPSocket::callback_timeOut,
+        m_oTimer.async_wait(boost::bind(&cInterruptibleBlockingUDPSocket::callback_timeOut,
                                         this, boost::asio::placeholders::error));
     }
 
@@ -246,7 +250,7 @@ bool cInterruptibleBlockUDPSocket::receiveFrom(char *cpBuffer, uint32_t u32NByte
 }
 
 
-void cInterruptibleBlockUDPSocket::callback_complete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred)
+void cInterruptibleBlockingUDPSocket::callback_complete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred)
 {
     m_bError = oError || (u32NBytesTransferred == 0);
     m_oTimer.cancel();
@@ -255,7 +259,7 @@ void cInterruptibleBlockUDPSocket::callback_complete(const boost::system::error_
     m_oLastError = oError;
 }
 
-void cInterruptibleBlockUDPSocket::callback_timeOut(const boost::system::error_code& oError)
+void cInterruptibleBlockingUDPSocket::callback_timeOut(const boost::system::error_code& oError)
 {
     if (oError)
     {
@@ -268,13 +272,13 @@ void cInterruptibleBlockUDPSocket::callback_timeOut(const boost::system::error_c
     m_oSocket.cancel();
 }
 
-void cInterruptibleBlockUDPSocket::cancelCurrrentOperations()
+void cInterruptibleBlockingUDPSocket::cancelCurrrentOperations()
 {
     m_oTimer.cancel();
     m_oSocket.cancel();
 }
 
-boost::asio::ip::udp::endpoint cInterruptibleBlockUDPSocket::createEndPoint(string strHostAddress, uint16_t u16Port)
+boost::asio::ip::udp::endpoint cInterruptibleBlockingUDPSocket::createEndPoint(string strHostAddress, uint16_t u16Port)
 {
     stringstream oSS;
     oSS << u16Port;
@@ -282,62 +286,68 @@ boost::asio::ip::udp::endpoint cInterruptibleBlockUDPSocket::createEndPoint(stri
     return *m_oResolver.resolve(boost::asio::ip::udp::resolver::query(boost::asio::ip::udp::v4(), strHostAddress, oSS.str()));
 }
 
-std::string cInterruptibleBlockUDPSocket::getEndPointHostAddress(boost::asio::ip::udp::endpoint oEndPoint)
+std::string cInterruptibleBlockingUDPSocket::getEndPointHostAddress(boost::asio::ip::udp::endpoint oEndPoint)
 {
     return oEndPoint.address().to_string();
 }
 
-uint16_t cInterruptibleBlockUDPSocket::getEndPointPort(boost::asio::ip::udp::endpoint oEndPoint)
+uint16_t cInterruptibleBlockingUDPSocket::getEndPointPort(boost::asio::ip::udp::endpoint oEndPoint)
 {
     return oEndPoint.port();
 }
 
-boost::asio::ip::udp::endpoint cInterruptibleBlockUDPSocket::getBoundLocalEndpoint()
+boost::asio::ip::udp::endpoint cInterruptibleBlockingUDPSocket::getBoundLocalEndpoint()
 {
     return m_oBoundLocalEndPoint;
 }
 
-std::string cInterruptibleBlockUDPSocket::getBoundLocalAddress()
+std::string cInterruptibleBlockingUDPSocket::getBoundLocalAddress()
 {
     return getEndPointHostAddress(m_oBoundLocalEndPoint);
 }
 
-uint16_t cInterruptibleBlockUDPSocket::getBoundLocalPort()
+uint16_t cInterruptibleBlockingUDPSocket::getBoundLocalPort()
 {
     return getEndPointPort(m_oBoundLocalEndPoint);
 }
 
-boost::asio::ip::udp::endpoint cInterruptibleBlockUDPSocket::getConnectedRemoteEndPoint()
+boost::asio::ip::udp::endpoint cInterruptibleBlockingUDPSocket::getConnectedRemoteEndPoint()
 {
     return m_oConnectedRemoteEndPoint;
 }
 
-std::string cInterruptibleBlockUDPSocket::getConnectedRemoteAddress()
+std::string cInterruptibleBlockingUDPSocket::getConnectedRemoteAddress()
 {
     return getEndPointHostAddress(m_oConnectedRemoteEndPoint);
 }
 
-uint16_t cInterruptibleBlockUDPSocket::getConnectedRemotePort()
+uint16_t cInterruptibleBlockingUDPSocket::getConnectedRemotePort()
 {
     return getEndPointPort(m_oConnectedRemoteEndPoint);
 }
 
-std::string cInterruptibleBlockUDPSocket::getName()
+std::string cInterruptibleBlockingUDPSocket::getName()
 {
     return m_strName;
 }
 
-uint32_t cInterruptibleBlockUDPSocket::getNBytesLastTransferred()
+uint32_t cInterruptibleBlockingUDPSocket::getNBytesLastTransferred()
 {
     return m_u32NBytesLastTransferred;
 }
 
-boost::system::error_code cInterruptibleBlockUDPSocket::getLastError()
+boost::system::error_code cInterruptibleBlockingUDPSocket::getLastError()
 {
     return m_oLastError;
 }
 
-uint32_t cInterruptibleBlockUDPSocket::getBytesAvailable()
+uint32_t cInterruptibleBlockingUDPSocket::getBytesAvailable()
 {
     return m_oSocket.available();
 }
+
+boost::asio::ip::udp::socket* cInterruptibleBlockingUDPSocket::getBoostSocketPointer()
+{
+    return &m_oSocket;
+}
+
