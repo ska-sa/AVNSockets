@@ -93,7 +93,7 @@ void cInterruptibleBlockingUDPSocket::openAndConnectSocket(string strRemoteAddre
     }
     else
     {
-        cout << "Successfully opened UDP socket.";
+        cout << "Successfully opened UDP socket." << endl;
     }
 
     m_oSocket.connect(m_oConnectedRemoteEndPoint, oEC);
@@ -104,7 +104,7 @@ void cInterruptibleBlockingUDPSocket::openAndConnectSocket(string strRemoteAddre
     }
     else
     {
-        cout << "Successfully connected UDP socket to " << getConnectedRemoteAddress() << ":" << getConnectedRemotePort() << endl;
+        cout << "Successfully created virtual UDP connection to " << getConnectedRemoteAddress() << ":" << getConnectedRemotePort() << endl;
     }
 }
 
