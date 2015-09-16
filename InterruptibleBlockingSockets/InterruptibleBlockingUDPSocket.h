@@ -32,8 +32,8 @@ private:
     //The serial port and io service for the port   
     boost::asio::io_service         m_oIOService;
     boost::asio::ip::udp::socket    m_oSocket;
-    boost::asio::ip::udp::endpoint  m_oBoundLocalEndPoint;
-    boost::asio::ip::udp::endpoint  m_oConnectedRemoteEndPoint;
+    boost::asio::ip::udp::endpoint  m_oLocalEndpoint;
+    boost::asio::ip::udp::endpoint  m_oPeerEndpoint;
 
     boost::asio::ip::udp::resolver  m_oResolver;
 
@@ -56,35 +56,35 @@ private:
 
 public:
     cInterruptibleBlockingUDPSocket(const std::string &strName = "");
-    cInterruptibleBlockingUDPSocket(const std::string &strRemoteAddress, uint16_t u16RemotePort, const std::string &strName = "");
+    cInterruptibleBlockingUDPSocket(const std::string &strLocalInterface, uint16_t u16LocalPort, const std::string &strPeerAddress = "", uint16_t u16PeerPort = 60001, const std::string &strName = "");
 
-    void                            openAndBindSocket(std::string strLocalAddress, uint16_t u16LocalPort);
-    void                            openAndConnectSocket(std::string strRemoteAddress, uint16_t u16RemotePort);
+    bool                            openAndBind(const std::string &strLocalAddress, uint16_t u16LocalPort);
+    bool                            openBindAndConnect(const std::string &strLocalAddress, uint16_t u16LocalPort, const std::string &strPeerAddress, uint16_t u16PeerPort);
     void                            close();
 
     bool                            send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
-    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const std::string &strRemoteHost, uint16_t u16RemotePort, uint32_t u32Timeout_ms = 0);
-    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms = 0);
+    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const std::string &strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms = 0);
+    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const boost::asio::ip::udp::endpoint &oPeerEndpoint, uint32_t u32Timeout_ms = 0);
 
     bool                            receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
-    bool                            receiveFrom(char *cpBuffer, uint32_t u32NBytes, std::string &strRemoteHost, uint16_t &u16RemotePort, uint32_t u32Timeout_ms = 0);
-    bool                            receiveFrom(char *cpBuffer, uint32_t u32NBytes, boost::asio::ip::udp::endpoint &oRemoteEndPoint, uint32_t u32Timeout_ms = 0);
+    bool                            receiveFrom(char *cpBuffer, uint32_t u32NBytes, std::string &strPeerAddress, uint16_t &u16PeerPort, uint32_t u32Timeout_ms = 0);
+    bool                            receiveFrom(char *cpBuffer, uint32_t u32NBytes, boost::asio::ip::udp::endpoint &oPeerEndpoint, uint32_t u32Timeout_ms = 0);
 
     void                            cancelCurrrentOperations();
 
     //Some utility functions
-    boost::asio::ip::udp::endpoint  createEndPoint(std::string strHostAddress, uint16_t u16Port);
-    std::string                     getEndPointHostAddress(boost::asio::ip::udp::endpoint oEndPoint);
-    uint16_t                        getEndPointPort(boost::asio::ip::udp::endpoint oEndPoint);
+    boost::asio::ip::udp::endpoint  createEndpoint(std::string strHostAddress, uint16_t u16Port);
+    std::string                     getEndpointHostAddress(boost::asio::ip::udp::endpoint oEndpoint);
+    uint16_t                        getEndpointPort(boost::asio::ip::udp::endpoint oEndpoint);
 
     //Some accessors
-    boost::asio::ip::udp::endpoint  getBoundLocalEndpoint();
-    std::string                     getBoundLocalAddress();
-    uint16_t                        getBoundLocalPort();
+    boost::asio::ip::udp::endpoint  getLocalEndpoint();
+    std::string                     getLocalInterface();
+    uint16_t                        getLocalPort();
 
-    boost::asio::ip::udp::endpoint  getConnectedRemoteEndPoint();
-    std::string                     getConnectedRemoteAddress();
-    uint16_t                        getConnectedRemotePort();
+    boost::asio::ip::udp::endpoint  getPeerEndpoint();
+    std::string                     getPeerAddress();
+    uint16_t                        getPeerPort();
 
     std::string                     getName();
 

@@ -1,5 +1,4 @@
 
-
 //System includes
 #include <iostream>
 
@@ -10,7 +9,7 @@
 #endif
 
 //Local includes
-#include "InterruptableBlockingTCPSocket.h"
+#include "InterruptibleBlockingTCPSocket.h"
 
 using namespace std;
 
@@ -47,7 +46,7 @@ void cInterruptibleBlockingTCPSocket::openAndConnectSocket(string strRemoteAddre
     m_oSocket.set_option( boost::asio::socket_base::receive_buffer_size(64 * 1024 * 1024) ); //Set buffer to 64 MB
     m_oSocket.set_option( boost::asio::socket_base::reuse_address(true) );
 
-    m_oConnectedRemoteEndPoint = createEndPoint(strRemoteAddress, u16RemotePort);
+    boost::asio::ip::tcp::endpoint oRemoteEndPoint = createEndPoint(strRemoteAddress, u16RemotePort);
 
     if(oEC)
     {
@@ -58,7 +57,7 @@ void cInterruptibleBlockingTCPSocket::openAndConnectSocket(string strRemoteAddre
         cout << "Successfully opened tcp socket.";
     }
 
-    m_oSocket.connect(m_oConnectedRemoteEndPoint, oEC);
+    m_oSocket.connect(oRemoteEndPoint, oEC);
     if (oEC)
     {
         m_oLastError = oEC;
@@ -66,7 +65,7 @@ void cInterruptibleBlockingTCPSocket::openAndConnectSocket(string strRemoteAddre
     }
     else
     {
-        cout << "Successfully connected tcp socket to " << getConnectedRemoteAddress() << ":" << getConnectedRemotePort() << endl;
+        cout << "Successfully connected tcp socket to " << getRemoteAddress() << ":" << getRemotePort() << endl;
     }
 }
 
@@ -75,7 +74,6 @@ void cInterruptibleBlockingTCPSocket::close()
     //If the socket is open close it
     if(m_oSocket.is_open())
     {
-        cout << "Socket is already open. Closing first." << endl;
         m_oSocket.cancel();
         m_oSocket.close();
     }
@@ -184,34 +182,34 @@ uint16_t cInterruptibleBlockingTCPSocket::getEndPointPort(boost::asio::ip::tcp::
     return oEndPoint.port();
 }
 
-boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getBoundLocalEndpoint()
+boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getLocalEndpoint()
 {
-    return m_oBoundLocalEndPoint;
+    return m_oSocket.local_endpoint();
 }
 
-std::string cInterruptibleBlockingTCPSocket::getBoundLocalAddress()
+std::string cInterruptibleBlockingTCPSocket::getLocalAddress()
 {
-    return getEndPointHostAddress(m_oBoundLocalEndPoint);
+    return getEndPointHostAddress(m_oSocket.local_endpoint());
 }
 
-uint16_t cInterruptibleBlockingTCPSocket::getBoundLocalPort()
+uint16_t cInterruptibleBlockingTCPSocket::getLocalPort()
 {
-    return getEndPointPort(m_oBoundLocalEndPoint);
+    return getEndPointPort(m_oSocket.local_endpoint());
 }
 
-boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getConnectedRemoteEndPoint()
+boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getRemoteEndPoint()
 {
-    return m_oConnectedRemoteEndPoint;
+    return m_oSocket.local_endpoint();
 }
 
-std::string cInterruptibleBlockingTCPSocket::getConnectedRemoteAddress()
+std::string cInterruptibleBlockingTCPSocket::getRemoteAddress()
 {
-    return getEndPointHostAddress(m_oConnectedRemoteEndPoint);
+    return getEndPointHostAddress(m_oSocket.remote_endpoint());
 }
 
-uint16_t cInterruptibleBlockingTCPSocket::getConnectedRemotePort()
+uint16_t cInterruptibleBlockingTCPSocket::getRemotePort()
 {
-    return getEndPointPort(m_oConnectedRemoteEndPoint);
+    return getEndPointPort(m_oSocket.remote_endpoint());
 }
 
 std::string cInterruptibleBlockingTCPSocket::getName()

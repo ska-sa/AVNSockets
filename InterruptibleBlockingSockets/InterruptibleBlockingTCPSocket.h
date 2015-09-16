@@ -32,8 +32,6 @@ private:
     //The serial port and io service for the port
     boost::asio::io_service         m_oIOService;
     boost::asio::ip::tcp::socket    m_oSocket;
-    boost::asio::ip::tcp::endpoint  m_oBoundLocalEndPoint;
-    boost::asio::ip::tcp::endpoint  m_oConnectedRemoteEndPoint;
 
     boost::asio::ip::tcp::resolver  m_oResolver;
 
@@ -73,13 +71,13 @@ public:
     uint16_t                        getEndPointPort(boost::asio::ip::tcp::endpoint oEndPoint);
 
     //Some accessors
-    boost::asio::ip::tcp::endpoint  getBoundLocalEndpoint();
-    std::string                     getBoundLocalAddress();
-    uint16_t                        getBoundLocalPort();
+    boost::asio::ip::tcp::endpoint  getLocalEndpoint();
+    std::string                     getLocalAddress();
+    uint16_t                        getLocalPort();
 
-    boost::asio::ip::tcp::endpoint  getConnectedRemoteEndPoint();
-    std::string                     getConnectedRemoteAddress();
-    uint16_t                        getConnectedRemotePort();
+    boost::asio::ip::tcp::endpoint  getRemoteEndPoint();
+    std::string                     getRemoteAddress();
+    uint16_t                        getRemotePort();
 
     std::string                     getName();
 
