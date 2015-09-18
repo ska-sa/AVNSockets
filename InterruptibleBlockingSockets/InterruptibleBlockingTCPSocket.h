@@ -33,10 +33,10 @@ private:
     boost::asio::io_service         m_oIOService;
     boost::asio::ip::tcp::socket    m_oSocket;
 
-    boost::asio::ip::tcp::resolver  m_oResolver;
-
-    //Timer for deterining timeouts
+    //Timer for determining timeouts
     boost::asio::deadline_timer     m_oTimer;
+
+    boost::asio::ip::tcp::resolver  m_oResolver;
 
     //Flag for determining read errors
     bool                            m_bError;
@@ -54,9 +54,9 @@ private:
 
 public:
     cInterruptibleBlockingTCPSocket(const std::string &strName = "");
-    cInterruptibleBlockingTCPSocket(const std::string &strRemoteAddress, uint16_t u16RemotePort, const std::string &strName = "");
+    cInterruptibleBlockingTCPSocket(const std::string &strPeerAddress, uint16_t u16PeerPort, const std::string &strName = "");
 
-    void                            openAndConnectSocket(std::string strRemoteAddress, uint16_t u16RemotePort);
+    bool                            openAndConnect(std::string strPeerAddress, uint16_t u16PeerPort);
     void                            close();
 
     bool                            send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
@@ -66,18 +66,18 @@ public:
     void                            cancelCurrrentOperations();
 
     //Some utility functions
-    boost::asio::ip::tcp::endpoint  createEndPoint(std::string strHostAddress, uint16_t u16Port);
-    std::string                     getEndPointHostAddress(boost::asio::ip::tcp::endpoint oEndPoint);
-    uint16_t                        getEndPointPort(boost::asio::ip::tcp::endpoint oEndPoint);
+    boost::asio::ip::tcp::endpoint  createEndpoint(std::string strHostAddress, uint16_t u16Port);
+    std::string                     getEndpointHostAddress(boost::asio::ip::tcp::endpoint oEndPoint);
+    uint16_t                        getEndpointPort(boost::asio::ip::tcp::endpoint oEndPoint);
 
     //Some accessors
     boost::asio::ip::tcp::endpoint  getLocalEndpoint();
-    std::string                     getLocalAddress();
+    std::string                     getLocalInterface();
     uint16_t                        getLocalPort();
 
-    boost::asio::ip::tcp::endpoint  getRemoteEndPoint();
-    std::string                     getRemoteAddress();
-    uint16_t                        getRemotePort();
+    boost::asio::ip::tcp::endpoint  getPeerEndpoint();
+    std::string                     getPeerAddress();
+    uint16_t                        getPeerPort();
 
     std::string                     getName();
 
