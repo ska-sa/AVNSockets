@@ -32,15 +32,27 @@ cInterruptibleBlockingTCPSocket::cInterruptibleBlockingTCPSocket(const string &s
     openAndConnect(strRemoteAddress, u16RemotePort);
 }
 
-bool cInterruptibleBlockingTCPSocket::openAndConnect(string strPeerAddress, uint16_t u16PeerPort)
+bool cInterruptibleBlockingTCPSocket::openAndConnect(string strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms)
 {
-    boost::system::error_code oEC;
+    //Necessary after a timeout:
+    m_oSocket.get_io_service().reset();
 
     //If the socket is already open close it
     close();
 
     //Open the socket
-    m_oSocket.open(boost::asio::ip::tcp::v4(), oEC);
+    m_oSocket.open(boost::asio::ip::tcp::v4(), m_oLastError);
+
+    if(m_oLastError)
+    {
+        cout << "Error opening socket: " << m_oLastError.message() << endl;
+        return false;
+    }
+    else
+    {
+        cout << "Successfully opened TCP socket. Attempting to connect..." << endl;
+    }
+    fflush(stdout);
 
     //Set some socket options
     m_oSocket.set_option( boost::asio::socket_base::receive_buffer_size(64 * 1024 * 1024) ); //Set buffer to 64 MB
@@ -48,29 +60,27 @@ bool cInterruptibleBlockingTCPSocket::openAndConnect(string strPeerAddress, uint
 
     boost::asio::ip::tcp::endpoint oPeerEndPoint = createEndpoint(strPeerAddress, u16PeerPort);
 
-    if(oEC)
+    //Async connect can have timeout or be cancelled at any point
+    m_oSocket.async_connect(oPeerEndPoint,
+                            boost::bind(&cInterruptibleBlockingTCPSocket::callback_connectComplete,
+                                        this,
+                                        boost::asio::placeholders::error)
+                            );
+
+
+    // Setup a deadline time to implement our timeout.
+    if(u32Timeout_ms)
     {
-        cout << "Error opening socket: " << oEC.message() << endl;
-        return false;
-    }
-    else
-    {
-        cout << "Successfully opened tcp socket.";
+        m_oTimer.expires_from_now( boost::posix_time::milliseconds(u32Timeout_ms) );
+        m_oTimer.async_wait( boost::bind(&cInterruptibleBlockingTCPSocket::callback_connectTimeOut,
+                                         this, boost::asio::placeholders::error) );
     }
 
-    m_oSocket.connect(oPeerEndPoint, oEC);
-    if (oEC)
-    {
-        m_oLastError = oEC;
-        cout << "Error connecting socket: " << oEC.message() << endl;
-        return false;
-    }
-    else
-    {
-        cout << "Successfully connected tcp socket to " << getPeerAddress() << ":" << getPeerPort() << endl;
-    }
+    // This will block until a character is read
+    // or until the it is cancelled.
+    m_oSocket.get_io_service().run();
 
-    return true;
+    return !m_bError;
 }
 
 void cInterruptibleBlockingTCPSocket::close()
@@ -92,16 +102,16 @@ bool cInterruptibleBlockingTCPSocket::send(char *cpBuffer, uint32_t u32NBytes, u
 
     //Asynchronously write characters
     m_oSocket.async_send( boost::asio::buffer(cpBuffer, u32NBytes),
-                             boost::bind(&cInterruptibleBlockingTCPSocket::callback_complete,
-                                         this,
-                                         boost::asio::placeholders::error,
-                                         boost::asio::placeholders::bytes_transferred) );
+                          boost::bind(&cInterruptibleBlockingTCPSocket::callback_transferComplete,
+                                      this,
+                                      boost::asio::placeholders::error,
+                                      boost::asio::placeholders::bytes_transferred) );
 
     // Setup a deadline time to implement our timeout.
     if(u32Timeout_ms)
     {
         m_oTimer.expires_from_now( boost::posix_time::milliseconds(u32Timeout_ms) );
-        m_oTimer.async_wait( boost::bind(&cInterruptibleBlockingTCPSocket::callback_timeOut,
+        m_oTimer.async_wait( boost::bind(&cInterruptibleBlockingTCPSocket::callback_transferTimeOut,
                                          this, boost::asio::placeholders::error) );
     }
 
@@ -119,16 +129,16 @@ bool cInterruptibleBlockingTCPSocket::receive(char *cpBuffer, uint32_t u32NBytes
 
     //Asynchronously read characters into string
     m_oSocket.async_receive( boost::asio::buffer(cpBuffer, u32NBytes),
-                                  boost::bind(&cInterruptibleBlockingTCPSocket::callback_complete,
-                                              this,
-                                              boost::asio::placeholders::error,
-                                              boost::asio::placeholders::bytes_transferred) );
+                             boost::bind(&cInterruptibleBlockingTCPSocket::callback_transferComplete,
+                                         this,
+                                         boost::asio::placeholders::error,
+                                         boost::asio::placeholders::bytes_transferred) );
 
     // Setup a deadline time to implement our timeout.
     if(u32Timeout_ms)
     {
         m_oTimer.expires_from_now(boost::posix_time::milliseconds(u32Timeout_ms));
-        m_oTimer.async_wait(boost::bind(&cInterruptibleBlockingTCPSocket::callback_timeOut,
+        m_oTimer.async_wait(boost::bind(&cInterruptibleBlockingTCPSocket::callback_transferTimeOut,
                                         this, boost::asio::placeholders::error));
     }
 
@@ -136,11 +146,33 @@ bool cInterruptibleBlockingTCPSocket::receive(char *cpBuffer, uint32_t u32NBytes
     // or until the it is cancelled.
     m_oSocket.get_io_service().run();
 
+    fflush(stdout);
+
     return !m_bError;
 }
 
+void cInterruptibleBlockingTCPSocket::callback_connectComplete(const boost::system::error_code& oError)
+{
+    m_bError = oError;
+    m_oTimer.cancel();
 
-void cInterruptibleBlockingTCPSocket::callback_complete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred)
+    m_oLastError = oError;
+}
+
+void cInterruptibleBlockingTCPSocket::callback_connectTimeOut(const boost::system::error_code& oError)
+{
+    if (oError)
+    {
+        m_oLastError = oError;
+        return;
+    }
+
+    std::cout << "!!! Time out reached on socket connect\"" << m_strName << "\" (" << this << ")" << std::endl;
+
+    m_oSocket.cancel();
+}
+
+void cInterruptibleBlockingTCPSocket::callback_transferComplete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred)
 {
     m_bError = oError || (u32NBytesTransferred == 0);
     m_oTimer.cancel();
@@ -149,7 +181,7 @@ void cInterruptibleBlockingTCPSocket::callback_complete(const boost::system::err
     m_oLastError = oError;
 }
 
-void cInterruptibleBlockingTCPSocket::callback_timeOut(const boost::system::error_code& oError)
+void cInterruptibleBlockingTCPSocket::callback_transferTimeOut(const boost::system::error_code& oError)
 {
     if (oError)
     {
@@ -157,7 +189,7 @@ void cInterruptibleBlockingTCPSocket::callback_timeOut(const boost::system::erro
         return;
     }
 
-    std::cout << "!!! Time out reached on socket \"" << m_strName << "\" (" << this << ")" << std::endl;
+    std::cout << "!!! Time out reached on socket transfer\"" << m_strName << "\" (" << this << ")" << std::endl;
 
     m_oSocket.cancel();
 }

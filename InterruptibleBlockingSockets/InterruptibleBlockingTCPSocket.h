@@ -48,15 +48,17 @@ private:
     //Optional label for this socket. May be useful for debugging.
     std::string                     m_strName;
 
-    //Internal callback functions for serial port
-    void                            callback_complete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred);
-    void                            callback_timeOut(const boost::system::error_code& oError);
+    //Internal callback functions for TCP socket port
+    void                            callback_connectComplete(const boost::system::error_code& oError);
+    void                            callback_connectTimeOut(const boost::system::error_code& oError);
+    void                            callback_transferComplete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred);
+    void                            callback_transferTimeOut(const boost::system::error_code& oError);
 
 public:
     cInterruptibleBlockingTCPSocket(const std::string &strName = "");
     cInterruptibleBlockingTCPSocket(const std::string &strPeerAddress, uint16_t u16PeerPort, const std::string &strName = "");
 
-    bool                            openAndConnect(std::string strPeerAddress, uint16_t u16PeerPort);
+    bool                            openAndConnect(std::string strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms = 0);
     void                            close();
 
     bool                            send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
