@@ -45,12 +45,12 @@ bool cInterruptibleBlockingTCPSocket::openAndConnect(string strPeerAddress, uint
 
     if(m_oLastError)
     {
-        cout << "Error opening socket: " << m_oLastError.message() << endl;
+        cout << "cInterruptibleBlockingTCPSocket::openAndConnect(): Error opening socket: " << m_oLastError.message() << endl;
         return false;
     }
     else
     {
-        cout << "Successfully opened TCP socket. Attempting to connect..." << endl;
+        cout << "cInterruptibleBlockingTCPSocket::openAndConnect(): Successfully opened TCP socket. Attempting to connect..." << endl;
     }
     fflush(stdout);
 
@@ -76,9 +76,10 @@ bool cInterruptibleBlockingTCPSocket::openAndConnect(string strPeerAddress, uint
                                          this, boost::asio::placeholders::error) );
     }
 
-    // This will block until a character is read
-    // or until the it is cancelled.
     m_oSocket.get_io_service().run();
+
+    if(!m_bError)
+        cout << "cInterruptibleBlockingTCPSocket::openAndConnect(): Successfully connected TCP socket to " << strPeerAddress << ":" << u16PeerPort << endl;
 
     return !m_bError;
 }
