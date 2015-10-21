@@ -37,6 +37,11 @@ cInterruptibleBlockingUDPSocket::cInterruptibleBlockingUDPSocket(const string &s
 
 }
 
+cInterruptibleBlockingUDPSocket::~cInterruptibleBlockingUDPSocket()
+{
+    close();
+}
+
 bool cInterruptibleBlockingUDPSocket::openAndBind(const string &strLocalAddress, uint16_t u16LocalPort)
 {
     //Error code to check returns of socket functions
@@ -116,7 +121,16 @@ void cInterruptibleBlockingUDPSocket::close()
     if(m_oSocket.is_open())
     {
         m_oSocket.cancel();
-        m_oSocket.close();
+
+        try
+        {
+            m_oSocket.close();
+        }
+        catch(boost::system::system_error &e)
+        {
+            //Catch special conditions where socket is trying to be opened etc.
+            //Prevents crash.
+        }
     }
 }
 

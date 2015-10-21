@@ -32,6 +32,11 @@ cInterruptibleBlockingTCPSocket::cInterruptibleBlockingTCPSocket(const string &s
     openAndConnect(strRemoteAddress, u16RemotePort);
 }
 
+cInterruptibleBlockingTCPSocket::~cInterruptibleBlockingTCPSocket()
+{
+    close();
+}
+
 bool cInterruptibleBlockingTCPSocket::openAndConnect(string strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms)
 {
     //Necessary after a timeout:
@@ -90,7 +95,16 @@ void cInterruptibleBlockingTCPSocket::close()
     if(m_oSocket.is_open())
     {
         m_oSocket.cancel();
-        m_oSocket.close();
+
+        try
+        {
+            m_oSocket.close();
+        }
+        catch(boost::system::system_error &e)
+        {
+            //Catch special conditions where socket is trying to be opened etc.
+            //Prevents crash.
+        }
     }
 }
 

@@ -28,35 +28,12 @@ typedef unsigned __int64 uint64_t;
 
 class cInterruptibleBlockingTCPSocket
 {
-private:
-    //The serial port and io service for the port
-    boost::asio::io_service         m_oIOService;
-    boost::asio::ip::tcp::socket    m_oSocket;
-
-    //Timer for determining timeouts
-    boost::asio::deadline_timer     m_oTimer;
-
-    boost::asio::ip::tcp::resolver  m_oResolver;
-
-    //Flag for determining read errors
-    bool                            m_bError;
-
-    //Info about about last transaction
-    uint32_t                        m_u32NBytesLastTransferred;
-    boost::system::error_code       m_oLastError;
-
-    //Optional label for this socket. May be useful for debugging.
-    std::string                     m_strName;
-
-    //Internal callback functions for TCP socket port
-    void                            callback_connectComplete(const boost::system::error_code& oError);
-    void                            callback_connectTimeOut(const boost::system::error_code& oError);
-    void                            callback_transferComplete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred);
-    void                            callback_transferTimeOut(const boost::system::error_code& oError);
 
 public:
     cInterruptibleBlockingTCPSocket(const std::string &strName = "");
     cInterruptibleBlockingTCPSocket(const std::string &strPeerAddress, uint16_t u16PeerPort, const std::string &strName = "");
+
+    ~cInterruptibleBlockingTCPSocket();
 
     bool                            openAndConnect(std::string strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms = 0);
     void                            close();
@@ -90,6 +67,31 @@ public:
     uint32_t                        getBytesAvailable();
     boost::asio::ip::tcp::socket*   getBoostSocketPointer();
 
+private:
+    //The serial port and io service for the port
+    boost::asio::io_service         m_oIOService;
+    boost::asio::ip::tcp::socket    m_oSocket;
+
+    //Timer for determining timeouts
+    boost::asio::deadline_timer     m_oTimer;
+
+    boost::asio::ip::tcp::resolver  m_oResolver;
+
+    //Flag for determining read errors
+    bool                            m_bError;
+
+    //Info about about last transaction
+    uint32_t                        m_u32NBytesLastTransferred;
+    boost::system::error_code       m_oLastError;
+
+    //Optional label for this socket. May be useful for debugging.
+    std::string                     m_strName;
+
+    //Internal callback functions for TCP socket port
+    void                            callback_connectComplete(const boost::system::error_code& oError);
+    void                            callback_connectTimeOut(const boost::system::error_code& oError);
+    void                            callback_transferComplete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred);
+    void                            callback_transferTimeOut(const boost::system::error_code& oError);
 };
 
 #endif // INTERRUPTIBLE_BLOCKING_TCP_SOCKET_H
