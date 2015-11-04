@@ -35,10 +35,10 @@ private:
     boost::asio::io_service         m_oIOService;
     boost::asio::ip::tcp::acceptor  m_oAcceptor;
 
-    boost::asio::ip::tcp::resolver  m_oResolver;
-
     //Timer for deterining timeouts
     boost::asio::deadline_timer     m_oTimer;
+
+    boost::asio::ip::tcp::resolver  m_oResolver;
 
     //Flag for determining read errors
     bool                            m_bError;

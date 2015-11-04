@@ -79,10 +79,10 @@ private:
     boost::asio::ip::udp::endpoint  m_oLocalEndpoint;
     boost::asio::ip::udp::endpoint  m_oPeerEndpoint;
 
-    boost::asio::ip::udp::resolver  m_oResolver;
-
     //Timer for deterining timeouts
     boost::asio::deadline_timer     m_oTimer;
+
+    boost::asio::ip::udp::resolver  m_oResolver;
 
     //Flag for determining read errors
     bool                            m_bError;

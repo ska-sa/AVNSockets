@@ -143,10 +143,10 @@ bool cInterruptibleBlockingUDPSocket::send(char *cpBuffer, uint32_t u32NBytes, u
 
     //Asynchronously write characters
     m_oSocket.async_send( boost::asio::buffer(cpBuffer, u32NBytes),
-                             boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
-                                         this,
-                                         boost::asio::placeholders::error,
-                                         boost::asio::placeholders::bytes_transferred) );
+                          boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
+                                      this,
+                                      boost::asio::placeholders::error,
+                                      boost::asio::placeholders::bytes_transferred) );
 
     // Setup a deadline time to implement our timeout.
     if(u32Timeout_ms)
@@ -205,10 +205,10 @@ bool cInterruptibleBlockingUDPSocket::receive(char *cpBuffer, uint32_t u32NBytes
 
     //Asynchronously read characters into string
     m_oSocket.async_receive( boost::asio::buffer(cpBuffer, u32NBytes),
-                                  boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
-                                              this,
-                                              boost::asio::placeholders::error,
-                                              boost::asio::placeholders::bytes_transferred) );
+                             boost::bind(&cInterruptibleBlockingUDPSocket::callback_complete,
+                                         this,
+                                         boost::asio::placeholders::error,
+                                         boost::asio::placeholders::bytes_transferred) );
 
     // Setup a deadline time to implement our timeout.
     if(u32Timeout_ms)
@@ -289,8 +289,16 @@ void cInterruptibleBlockingUDPSocket::callback_timeOut(const boost::system::erro
 
 void cInterruptibleBlockingUDPSocket::cancelCurrrentOperations()
 {
-    m_oTimer.cancel();
-    m_oSocket.cancel();
+    try
+    {
+        m_oTimer.cancel();
+        m_oSocket.cancel();
+    }
+    catch(boost::system::system_error &e)
+    {
+        //Catch special conditions where socket is trying to be opened etc.
+        //Prevents crash.
+    }
 }
 
 boost::asio::ip::udp::endpoint cInterruptibleBlockingUDPSocket::createEndpoint(string strHostAddress, uint16_t u16Port)
