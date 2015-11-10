@@ -120,6 +120,7 @@ void cInterruptibleBlockingUDPSocket::close()
     //If the socket is open close it
     if(m_oSocket.is_open())
     {
+        cout << "cInterruptibleBlockingUDPSocket::close(): Cancelling all current socket operations." << endl;
         m_oSocket.cancel();
 
         try
