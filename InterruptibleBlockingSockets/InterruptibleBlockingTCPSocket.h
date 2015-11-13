@@ -17,6 +17,8 @@ typedef unsigned __int64 uint64_t;
 #include <inttypes.h>
 #endif
 
+#include <vector>
+
 //Library includes:
 #ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
 #include <boost/asio/io_service.hpp>
@@ -41,6 +43,8 @@ public:
     bool                            send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
 
     bool                            receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
+
+    bool                            readUntil(std::string &strBuffer, const std::string &strDelimiter, uint32_t u32Timeout_ms = 0);
 
     void                            cancelCurrrentOperations();
 

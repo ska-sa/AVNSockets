@@ -6,6 +6,8 @@
 #ifndef Q_MOC_RUN //Qt's MOC and Boost have some issues don't let MOC process boost headers
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
+#include <boost/asio/streambuf.hpp>
+#include <boost/asio/read_until.hpp>
 #endif
 
 //Local includes
@@ -161,7 +163,39 @@ bool cInterruptibleBlockingTCPSocket::receive(char *cpBuffer, uint32_t u32NBytes
     // or until the it is cancelled.
     m_oSocket.get_io_service().run();
 
-    fflush(stdout);
+    return !m_bError;
+}
+
+bool cInterruptibleBlockingTCPSocket::readUntil(string &strBuffer, const string &strDelimiter, uint32_t u32Timeout_ms)
+{
+    //Necessary after a timeout:
+    m_oSocket.get_io_service().reset();
+
+    boost::asio::streambuf oStreamBuf;
+
+    //Asynchronously read until the delimiting character is found
+    boost::asio::async_read_until(m_oSocket, oStreamBuf, strDelimiter,
+                                  boost::bind(&cInterruptibleBlockingTCPSocket::callback_transferComplete,
+                                              this,
+                                              boost::asio::placeholders::error,
+                                              boost::asio::placeholders::bytes_transferred) );
+
+    // Setup a deadline time to implement our timeout.
+    if(u32Timeout_ms)
+    {
+        m_oTimer.expires_from_now(boost::posix_time::milliseconds(u32Timeout_ms));
+        m_oTimer.async_wait(boost::bind(&cInterruptibleBlockingTCPSocket::callback_transferTimeOut,
+                                        this, boost::asio::placeholders::error));
+    }
+
+    // This will block until a byte is read
+    // or until the it is cancelled.
+    m_oSocket.get_io_service().run();
+
+    //Copy the data to the string. The extra copy is not efficient but this function will typically only be used for short
+    //text messages.
+    std::istream oIS(&oStreamBuf);
+    oIS >> strBuffer;
 
     return !m_bError;
 }
@@ -211,8 +245,16 @@ void cInterruptibleBlockingTCPSocket::callback_transferTimeOut(const boost::syst
 
 void cInterruptibleBlockingTCPSocket::cancelCurrrentOperations()
 {
-    m_oTimer.cancel();
-    m_oSocket.cancel();
+    try
+    {
+        m_oTimer.cancel();
+        m_oSocket.cancel();
+    }
+    catch(boost::system::system_error &e)
+    {
+        //Catch special conditions where socket is trying to be opened etc.
+        //Prevents crash.
+    }
 }
 
 boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::createEndpoint(string strHostAddress, uint16_t u16Port)
