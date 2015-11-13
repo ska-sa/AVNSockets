@@ -117,12 +117,12 @@ bool cInterruptibleBlockingUDPSocket::openBindAndConnect(const string &strLocalI
 
 void cInterruptibleBlockingUDPSocket::close()
 {
+    cout << "cInterruptibleBlockingUDPSocket::close(): Cancelling all current socket operations." << endl;
+    cancelCurrrentOperations();
+
     //If the socket is open close it
     if(m_oSocket.is_open())
     {
-        cout << "cInterruptibleBlockingUDPSocket::close(): Cancelling all current socket operations." << endl;
-        m_oSocket.cancel();
-
         try
         {
             m_oSocket.close();
@@ -289,11 +289,12 @@ void cInterruptibleBlockingUDPSocket::callback_timeOut(const boost::system::erro
 }
 
 void cInterruptibleBlockingUDPSocket::cancelCurrrentOperations()
-{
+{   
     try
     {
-        m_oTimer.cancel();
+        m_oSocket.get_io_service().stop();
         m_oSocket.cancel();
+        m_oTimer.cancel();
     }
     catch(boost::system::system_error &e)
     {

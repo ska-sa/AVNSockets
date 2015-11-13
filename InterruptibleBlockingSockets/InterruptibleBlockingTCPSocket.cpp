@@ -211,8 +211,17 @@ void cInterruptibleBlockingTCPSocket::callback_transferTimeOut(const boost::syst
 
 void cInterruptibleBlockingTCPSocket::cancelCurrrentOperations()
 {
-    m_oTimer.cancel();
-    m_oSocket.cancel();
+    try
+    {
+        m_oSocket.get_io_service().stop();
+        m_oSocket.cancel();
+        m_oTimer.cancel();
+    }
+    catch(boost::system::system_error &e)
+    {
+        //Catch special conditions where socket is trying to be opened etc.
+        //Prevents crash.
+    }
 }
 
 boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::createEndpoint(string strHostAddress, uint16_t u16Port)
