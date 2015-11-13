@@ -247,8 +247,9 @@ void cInterruptibleBlockingTCPSocket::cancelCurrrentOperations()
 {
     try
     {
-        m_oTimer.cancel();
+        m_oSocket.get_io_service().stop();
         m_oSocket.cancel();
+        m_oTimer.cancel();
     }
     catch(boost::system::system_error &e)
     {
