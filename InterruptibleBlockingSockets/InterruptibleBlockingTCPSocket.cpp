@@ -65,7 +65,16 @@ bool cInterruptibleBlockingTCPSocket::openAndConnect(string strPeerAddress, uint
     m_oSocket.set_option( boost::asio::socket_base::receive_buffer_size(64 * 1024 * 1024) ); //Set buffer to 64 MB
     m_oSocket.set_option( boost::asio::socket_base::reuse_address(true) );
 
-    boost::asio::ip::tcp::endpoint oPeerEndPoint = createEndpoint(strPeerAddress, u16PeerPort);
+    boost::asio::ip::tcp::endpoint oPeerEndPoint;
+    try
+    {
+        oPeerEndPoint = createEndpoint(strPeerAddress, u16PeerPort);
+    }
+    catch(boost::system::system_error &e)
+    {
+        //Typically thrown when hostname cannot be resolved.
+        return false;
+    }
 
     //Async connect can have timeout or be cancelled at any point
     m_oSocket.async_connect(oPeerEndPoint,
@@ -110,7 +119,7 @@ void cInterruptibleBlockingTCPSocket::close()
     }
 }
 
-bool cInterruptibleBlockingTCPSocket::send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
+bool cInterruptibleBlockingTCPSocket::send(const char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
 {
     //Note this function sends to the specific endpoint set in the constructor or with the openAndBind function
 
@@ -194,8 +203,7 @@ bool cInterruptibleBlockingTCPSocket::readUntil(string &strBuffer, const string 
 
     //Copy the data to the string. The extra copy is not efficient but this function will typically only be used for short
     //text messages.
-    std::istream oIS(&oStreamBuf);
-    oIS >> strBuffer;
+    strBuffer = std::string( (std::istreambuf_iterator<char>(&oStreamBuf)), std::istreambuf_iterator<char>() );
 
     return !m_bError;
 }
@@ -238,8 +246,6 @@ void cInterruptibleBlockingTCPSocket::callback_transferTimeOut(const boost::syst
         return;
     }
 
-    std::cout << "!!! Time out reached on socket transfer\"" << m_strName << "\" (" << this << ")" << std::endl;
-
     m_oSocket.cancel();
 }
 
@@ -266,62 +272,62 @@ boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::createEndpoint(s
     return *m_oResolver.resolve(boost::asio::ip::tcp::resolver::query(boost::asio::ip::tcp::v4(), strHostAddress, oSS.str()));
 }
 
-std::string cInterruptibleBlockingTCPSocket::getEndpointHostAddress(boost::asio::ip::tcp::endpoint oEndPoint)
+std::string cInterruptibleBlockingTCPSocket::getEndpointHostAddress(boost::asio::ip::tcp::endpoint oEndPoint) const
 {
     return oEndPoint.address().to_string();
 }
 
-uint16_t cInterruptibleBlockingTCPSocket::getEndpointPort(boost::asio::ip::tcp::endpoint oEndPoint)
+uint16_t cInterruptibleBlockingTCPSocket::getEndpointPort(boost::asio::ip::tcp::endpoint oEndPoint) const
 {
     return oEndPoint.port();
 }
 
-boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getLocalEndpoint()
+boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getLocalEndpoint() const
 {
     return m_oSocket.local_endpoint();
 }
 
-std::string cInterruptibleBlockingTCPSocket::getLocalInterface()
+std::string cInterruptibleBlockingTCPSocket::getLocalInterface() const
 {
     return getEndpointHostAddress(m_oSocket.local_endpoint());
 }
 
-uint16_t cInterruptibleBlockingTCPSocket::getLocalPort()
+uint16_t cInterruptibleBlockingTCPSocket::getLocalPort() const
 {
     return getEndpointPort(m_oSocket.local_endpoint());
 }
 
-boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getPeerEndpoint()
+boost::asio::ip::tcp::endpoint cInterruptibleBlockingTCPSocket::getPeerEndpoint() const
 {
     return m_oSocket.local_endpoint();
 }
 
-std::string cInterruptibleBlockingTCPSocket::getPeerAddress()
+std::string cInterruptibleBlockingTCPSocket::getPeerAddress() const
 {
     return getEndpointHostAddress(m_oSocket.remote_endpoint());
 }
 
-uint16_t cInterruptibleBlockingTCPSocket::getPeerPort()
+uint16_t cInterruptibleBlockingTCPSocket::getPeerPort() const
 {
     return getEndpointPort(m_oSocket.remote_endpoint());
 }
 
-std::string cInterruptibleBlockingTCPSocket::getName()
+std::string cInterruptibleBlockingTCPSocket::getName() const
 {
     return m_strName;
 }
 
-uint32_t cInterruptibleBlockingTCPSocket::getNBytesLastTransferred()
+uint32_t cInterruptibleBlockingTCPSocket::getNBytesLastTransferred() const
 {
     return m_u32NBytesLastTransferred;
 }
 
-boost::system::error_code cInterruptibleBlockingTCPSocket::getLastError()
+boost::system::error_code cInterruptibleBlockingTCPSocket::getLastError() const
 {
     return m_oLastError;
 }
 
-uint32_t cInterruptibleBlockingTCPSocket::getBytesAvailable()
+uint32_t cInterruptibleBlockingTCPSocket::getBytesAvailable() const
 {
     return m_oSocket.available();
 }

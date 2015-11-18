@@ -40,7 +40,7 @@ public:
     bool                            openAndConnect(std::string strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms = 0);
     void                            close();
 
-    bool                            send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
+    bool                            send(const char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
 
     bool                            receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
 
@@ -50,25 +50,25 @@ public:
 
     //Some utility functions
     boost::asio::ip::tcp::endpoint  createEndpoint(std::string strHostAddress, uint16_t u16Port);
-    std::string                     getEndpointHostAddress(boost::asio::ip::tcp::endpoint oEndPoint);
-    uint16_t                        getEndpointPort(boost::asio::ip::tcp::endpoint oEndPoint);
+    std::string                     getEndpointHostAddress(boost::asio::ip::tcp::endpoint oEndPoint) const;
+    uint16_t                        getEndpointPort(boost::asio::ip::tcp::endpoint oEndPoint) const;
 
     //Some accessors
-    boost::asio::ip::tcp::endpoint  getLocalEndpoint();
-    std::string                     getLocalInterface();
-    uint16_t                        getLocalPort();
+    boost::asio::ip::tcp::endpoint  getLocalEndpoint() const;
+    std::string                     getLocalInterface() const;
+    uint16_t                        getLocalPort() const;
 
-    boost::asio::ip::tcp::endpoint  getPeerEndpoint();
-    std::string                     getPeerAddress();
-    uint16_t                        getPeerPort();
+    boost::asio::ip::tcp::endpoint  getPeerEndpoint() const;
+    std::string                     getPeerAddress() const;
+    uint16_t                        getPeerPort() const;
 
-    std::string                     getName();
+    std::string                     getName() const;
 
-    uint32_t                        getNBytesLastTransferred();
-    boost::system::error_code       getLastError();
+    uint32_t                        getNBytesLastTransferred() const;
+    boost::system::error_code       getLastError() const;
 
     //Pass through some boost socket functionality:
-    uint32_t                        getBytesAvailable();
+    uint32_t                        getBytesAvailable() const;
     boost::asio::ip::tcp::socket*   getBoostSocketPointer();
 
 private:
@@ -91,7 +91,7 @@ private:
     //Optional label for this socket. May be useful for debugging.
     std::string                     m_strName;
 
-    //Internal callback functions for TCP socket port
+    //Internal callback functions for TCP socket port called by boost asynchronous socket API
     void                            callback_connectComplete(const boost::system::error_code& oError);
     void                            callback_connectTimeOut(const boost::system::error_code& oError);
     void                            callback_transferComplete(const boost::system::error_code& oError, uint32_t u32NBytesTransferred);

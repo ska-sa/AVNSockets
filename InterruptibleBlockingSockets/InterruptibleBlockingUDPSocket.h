@@ -39,9 +39,9 @@ public:
     bool                            openBindAndConnect(const std::string &strLocalAddress, uint16_t u16LocalPort, const std::string &strPeerAddress, uint16_t u16PeerPort);
     void                            close();
 
-    bool                            send(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
-    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const std::string &strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms = 0);
-    bool                            sendTo(char *cpBuffer, uint32_t u32NBytes, const boost::asio::ip::udp::endpoint &oPeerEndpoint, uint32_t u32Timeout_ms = 0);
+    bool                            send(const char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
+    bool                            sendTo(const char *cpBuffer, uint32_t u32NBytes, const std::string &strPeerAddress, uint16_t u16PeerPort, uint32_t u32Timeout_ms = 0);
+    bool                            sendTo(const char *cpBuffer, uint32_t u32NBytes, const boost::asio::ip::udp::endpoint &oPeerEndpoint, uint32_t u32Timeout_ms = 0);
 
     bool                            receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms = 0);
     bool                            receiveFrom(char *cpBuffer, uint32_t u32NBytes, std::string &strPeerAddress, uint16_t &u16PeerPort, uint32_t u32Timeout_ms = 0);
@@ -51,25 +51,25 @@ public:
 
     //Some utility functions
     boost::asio::ip::udp::endpoint  createEndpoint(std::string strHostAddress, uint16_t u16Port);
-    std::string                     getEndpointHostAddress(boost::asio::ip::udp::endpoint oEndpoint);
-    uint16_t                        getEndpointPort(boost::asio::ip::udp::endpoint oEndpoint);
+    std::string                     getEndpointHostAddress(boost::asio::ip::udp::endpoint oEndpoint) const;
+    uint16_t                        getEndpointPort(boost::asio::ip::udp::endpoint oEndpoint) const;
 
     //Some accessors
-    boost::asio::ip::udp::endpoint  getLocalEndpoint();
-    std::string                     getLocalInterface();
-    uint16_t                        getLocalPort();
+    boost::asio::ip::udp::endpoint  getLocalEndpoint() const;
+    std::string                     getLocalInterface() const;
+    uint16_t                        getLocalPort() const ;
 
-    boost::asio::ip::udp::endpoint  getPeerEndpoint();
-    std::string                     getPeerAddress();
-    uint16_t                        getPeerPort();
+    boost::asio::ip::udp::endpoint  getPeerEndpoint() const;
+    std::string                     getPeerAddress() const;
+    uint16_t                        getPeerPort() const;
 
-    std::string                     getName();
+    std::string                     getName() const;
 
-    uint32_t                        getNBytesLastTransferred();
-    boost::system::error_code       getLastError();
+    uint32_t                        getNBytesLastTransferred() const;
+    boost::system::error_code       getLastError() const;
 
     //Pass through some boost socket functionality:
-    uint32_t                        getBytesAvailable();
+    uint32_t                        getBytesAvailable() const;
     boost::asio::ip::udp::socket*   getBoostSocketPointer();
 
 private:
