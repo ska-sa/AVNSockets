@@ -61,12 +61,12 @@ bool cInterruptibleBlockingUDPSocket::openAndBind(const string &strLocalAddress,
 
     if(oEC)
     {
-        cout << "Error opening socket: " << oEC.message() << endl;
+        cout << "cInterruptibleBlockingUDPSocket::openAndBind(): Error opening socket: " << oEC.message() << endl;
         return false;
     }
     else
     {
-        cout << "Successfully opened UDP socket." << endl;
+        cout << "cInterruptibleBlockingUDPSocket::openAndBind(): Successfully opened UDP socket." << endl;
     }
 
     m_oSocket.bind(m_oLocalEndpoint, oEC);
@@ -78,7 +78,7 @@ bool cInterruptibleBlockingUDPSocket::openAndBind(const string &strLocalAddress,
     }
     else
     {
-        cout << "Successfully bound UDP socket to " << getLocalInterface() << ":" << getLocalPort() << endl;
+        cout << "cInterruptibleBlockingUDPSocket::openAndBind(): Successfully bound UDP socket to " << getLocalInterface() << ":" << getLocalPort() << endl;
     }
     return true;
 }
