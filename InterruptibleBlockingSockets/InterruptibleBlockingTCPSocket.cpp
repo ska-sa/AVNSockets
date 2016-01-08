@@ -141,7 +141,7 @@ bool cInterruptibleBlockingTCPSocket::send(const char *cpBuffer, uint32_t u32NBy
                                          this, boost::asio::placeholders::error) );
     }
 
-    // This will block until a character is read
+    // This will block until the string is written
     // or until the it is cancelled.
     m_oSocket.get_io_service().run();
 
