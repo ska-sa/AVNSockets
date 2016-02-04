@@ -300,10 +300,20 @@ bool cInterruptibleBlockingTCPSocket::readUntil(string &strBuffer, const string 
 
     // This will block until the delimiter is found and read
     // or until the it is cancelled.
-    m_oSocket.get_io_service().run();
+    for(;;)
+    {
+        try
+        {
+            m_oSocket.get_io_service().run();
+            break;
+        }
+        catch(...)
+        {
+            cout << "cInterruptibleBlockingTCPSocket::readUntil(): Caught exception on io_service::run()" << endl;
+        }
+    }
 
     //Copy the data to the member string. This may contain more than 1 of the delimiter
-    //TODO: This conversion sometimes throws an exception figure out what and why
     try
     {
         m_strReadUntilBuff.append( std::string( (std::istreambuf_iterator<char>(&oStreamBuf)), std::istreambuf_iterator<char>() ) );
@@ -317,6 +327,9 @@ bool cInterruptibleBlockingTCPSocket::readUntil(string &strBuffer, const string 
     uint32_t u32DelimPos = m_strReadUntilBuff.find_first_of(strDelimiter);
     strBuffer.append(m_strReadUntilBuff.substr(0, u32DelimPos + 1));
     m_strReadUntilBuff.erase(0, u32DelimPos + 1);
+
+    //Debug: Deallocation of the streambuffer seems segfault sometimes. Try empty first:
+    oStreamBuf.consume(oStreamBuf.size());
 
     return !m_bReadError;
 }
