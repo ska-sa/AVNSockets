@@ -24,6 +24,7 @@ typedef unsigned __int64 uint64_t;
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/deadline_timer.hpp>
+#include <boost/thread/mutex.hpp>
 #endif
 
 //Local includes
@@ -108,6 +109,9 @@ private:
 
     //Optional label for this socket. May be useful for debugging.
     std::string                     m_strName;
+
+    //Boost sockets are not thread safe so lock access during reading/writing
+    boost::mutex                    m_oMutex;
 
     //Internal callback functions for TCP socket port called by boost asynchronous socket API
     void                            callback_connectComplete(const boost::system::error_code& oError);

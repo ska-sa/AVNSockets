@@ -136,6 +136,8 @@ bool cInterruptibleBlockingTCPSocket::send(const char *cpBuffer, uint32_t u32NBy
 {
     //Note this function sends to the specific endpoint set in the constructor or with the openAndBind function
 
+    boost::unique_lock<boost::mutex> oLock(m_oMutex);
+
     if(m_oSocket.get_io_service().stopped())
     {
         //Necessary after a timeout or previously finished run:
@@ -166,6 +168,8 @@ bool cInterruptibleBlockingTCPSocket::send(const char *cpBuffer, uint32_t u32NBy
 
 bool cInterruptibleBlockingTCPSocket::receive(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
 {
+    boost::unique_lock<boost::mutex> oLock(m_oMutex);
+
     if(m_oSocket.get_io_service().stopped())
     {
         //Necessary after a timeout or previously finished run:
@@ -196,6 +200,8 @@ bool cInterruptibleBlockingTCPSocket::receive(char *cpBuffer, uint32_t u32NBytes
 
 bool cInterruptibleBlockingTCPSocket::write(const char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
 {
+    boost::unique_lock<boost::mutex> oLock(m_oMutex);
+
     //The write function guarantees deliver of all u32NBytes bytes in send buffer unless and error is encountered
 
     if(m_oSocket.get_io_service().stopped())
@@ -233,6 +239,8 @@ bool cInterruptibleBlockingTCPSocket::write(const std::string &strData, uint32_t
 
 bool cInterruptibleBlockingTCPSocket::read(char *cpBuffer, uint32_t u32NBytes, uint32_t u32Timeout_ms)
 {
+    boost::unique_lock<boost::mutex> oLock(m_oMutex);
+
     //The read function guarantees reading of all u32NBytes bytes to buffer unless an error is encountered
 
     if(m_oSocket.get_io_service().stopped())
@@ -265,6 +273,8 @@ bool cInterruptibleBlockingTCPSocket::read(char *cpBuffer, uint32_t u32NBytes, u
 
 bool cInterruptibleBlockingTCPSocket::readUntil(string &strBuffer, const string &strDelimiter, uint32_t u32Timeout_ms)
 {
+    boost::unique_lock<boost::mutex> oLock(m_oMutex);
+
     //Check if we have already read up the delimeter if so return this string
     if(m_strReadUntilBuff.find_first_of(strDelimiter) != string::npos)
     {
