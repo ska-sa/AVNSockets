@@ -99,7 +99,12 @@ bool cInterruptibleBlockingTCPAcceptor::accept(boost::shared_ptr<cInterruptibleB
 
 void cInterruptibleBlockingTCPAcceptor::callback_complete(const boost::system::error_code& oError)
 {
-    m_bError = oError;
+    m_bError = true;
+    if (boost::system::errc::success == oError)
+    {
+      m_bError = false;
+    }
+    //RE: m_bError = oError;
     m_oTimer.cancel();
 
     m_oLastError = oError;

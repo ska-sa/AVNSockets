@@ -346,7 +346,12 @@ bool cInterruptibleBlockingTCPSocket::readUntil(string &strBuffer, const string 
 
 void cInterruptibleBlockingTCPSocket::callback_connectComplete(const boost::system::error_code& oError)
 {
-    m_bOpenAndConnectError = oError;
+    m_bOpenAndConnectError= true;
+    if (boost::system::errc::success == oError)
+    {
+      m_bOpenAndConnectError= false;
+    }
+    //RE: m_bOpenAndConnectError = oError;
     m_oOpenAndConnectTimer.cancel();
 
     m_oLastopenAndConnectError = oError;
