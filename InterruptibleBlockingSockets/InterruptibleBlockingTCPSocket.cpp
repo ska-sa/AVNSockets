@@ -392,7 +392,7 @@ void cInterruptibleBlockingTCPSocket::callback_readTimeOut(const boost::system::
 {
     if (oError)
     {
-        m_oLastReadError = oError;
+        m_oLastReadTimeoutError = oError;
         return;
     }
 

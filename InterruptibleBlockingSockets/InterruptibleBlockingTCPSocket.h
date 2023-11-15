@@ -100,6 +100,7 @@ private:
     uint32_t                        m_u32NBytesLastRead;
     uint32_t                        m_u32NBytesLastWritten;
     boost::system::error_code       m_oLastReadError;
+    boost::system::error_code       m_oLastReadTimeoutError;
     boost::system::error_code       m_oLastWriteError;
     boost::system::error_code       m_oLastopenAndConnectError;
 
